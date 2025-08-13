@@ -18,7 +18,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.constants.IntakeDeployConstants;
+import frc.robot.constants.ShooterHoodConstants;
 
 public class IntakeDeploy extends SubsystemBase {
   /** Creates a new IntakeDeploy. */
@@ -42,8 +43,8 @@ public class IntakeDeploy extends SubsystemBase {
 
     intakeLimitSwitch = new DigitalInput(2);
 
-    intakePIDContorller = new PIDController(Constants.intakeP, Constants.intakeI, Constants.intakeD);
-    intakePIDContorller.setTolerance(Constants.hoodTolerance);
+    intakePIDContorller = new PIDController(IntakeDeployConstants.intakeP, IntakeDeployConstants.intakeI, IntakeDeployConstants.intakeD);
+    intakePIDContorller.setTolerance(ShooterHoodConstants.hoodTolerance);
     intakePIDContorller.disableContinuousInput();
     intakePIDContorller.setIntegratorRange(-0.2, 0.2);
   }
@@ -84,9 +85,9 @@ public class IntakeDeploy extends SubsystemBase {
 
   public void deployIntake() {
 
-    double power = intakePIDContorller.calculate(getEncoderAngle(), Constants.maxIntakeEncoderAngle);
+    double power = intakePIDContorller.calculate(getEncoderAngle(), IntakeDeployConstants.maxIntakeEncoderAngle);
     power = MathUtil.clamp(power, -.2, 1);
-    if ((Math.abs(getEncoderAngle() - Constants.maxIntakeEncoderAngle) < Constants.intakeTolerance)) {
+    if ((Math.abs(getEncoderAngle() - IntakeDeployConstants.maxIntakeEncoderAngle) < IntakeDeployConstants.intakeTolerance)) {
       power = 0;
     }
 
@@ -95,10 +96,10 @@ public class IntakeDeploy extends SubsystemBase {
   }
 
   public void retractIntake() {
-    double power = intakePIDContorller.calculate(getEncoderAngle(), Constants.minIntakeEncoderAngle);
+    double power = intakePIDContorller.calculate(getEncoderAngle(), IntakeDeployConstants.minIntakeEncoderAngle);
     power = MathUtil.clamp(power, -.5, .2);
-    if ((Math.abs(getEncoderAngle() - Constants.minIntakeEncoderAngle) < Constants.intakeTolerance)) {
-      power = Constants.intakeF;
+    if ((Math.abs(getEncoderAngle() - IntakeDeployConstants.minIntakeEncoderAngle) < IntakeDeployConstants.intakeTolerance)) {
+      power = IntakeDeployConstants.intakeF;
     }
     intakeDeployMotor.set(power);
     // SmartDashboard.putNumber("retract power", power);
