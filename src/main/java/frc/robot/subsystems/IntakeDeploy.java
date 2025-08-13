@@ -35,10 +35,10 @@ public class IntakeDeploy extends SubsystemBase {
 
   public IntakeDeploy() {
     intakeDeployMotor = new SparkMax(25, MotorType.kBrushless);
-    motorConfig = new SparkMaxConfig(); // there is a constructor function, yet it claims it can't instantiate
-    motorConfig.idleMode(IdleMode.kBrake);
-    motorConfig.inverted(true);
-    intakeDeployMotor.configure(motorConfig, SparkBase.ResetMode.kNoResetSafeParameters, SparkBase.PersistMode.kNoPersistParameters);
+    motorConfig = new SparkMaxConfig();
+
+    this.buildMotorConfigs();
+    this.applyMotorConfigs();
 
     intakeLimitSwitch = new DigitalInput(2);
 
@@ -46,6 +46,15 @@ public class IntakeDeploy extends SubsystemBase {
     intakePIDContorller.setTolerance(Constants.hoodTolerance);
     intakePIDContorller.disableContinuousInput();
     intakePIDContorller.setIntegratorRange(-0.2, 0.2);
+  }
+
+  private void buildMotorConfigs() {
+    motorConfig.idleMode(IdleMode.kBrake);
+    motorConfig.inverted(true);
+  }
+
+  private void applyMotorConfigs() {
+    intakeDeployMotor.configure(motorConfig, SparkBase.ResetMode.kNoResetSafeParameters, SparkBase.PersistMode.kNoPersistParameters);
   }
 
   @Override
