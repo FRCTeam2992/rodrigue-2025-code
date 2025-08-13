@@ -10,6 +10,8 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkBase;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -21,6 +23,7 @@ import frc.robot.Constants;
 public class IntakeDeploy extends SubsystemBase {
   /** Creates a new IntakeDeploy. */
   private SparkMax intakeDeployMotor;
+  private SparkMaxConfig motorConfig;
 
   private DigitalInput intakeLimitSwitch;
 
@@ -32,8 +35,10 @@ public class IntakeDeploy extends SubsystemBase {
 
   public IntakeDeploy() {
     intakeDeployMotor = new SparkMax(25, MotorType.kBrushless);
-    intakeDeployMotor.setIdleMode(IdleMode.kBrake);
-    intakeDeployMotor.inverted(true);
+    motorConfig = new SparkMaxConfig(); // there is a constructor function, yet it claims it can't instantiate
+    motorConfig.idleMode(IdleMode.kBrake);
+    motorConfig.inverted(true);
+    intakeDeployMotor.configure(motorConfig, SparkBase.ResetMode.kNoResetSafeParameters, SparkBase.PersistMode.kNoPersistParameters);
 
     intakeLimitSwitch = new DigitalInput(2);
 
