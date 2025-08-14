@@ -13,6 +13,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.Devices;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -44,7 +45,7 @@ public class Intake extends SubsystemBase {
 
     public Intake() {
 
-        intakeMotor = new TalonFX(21);
+        intakeMotor = new TalonFX(Devices.CANDeviceAddress.Intake.id);
         intakeMotorConfigs = new TalonFXConfiguration();
         manualControlRequest = new DutyCycleOut(0.0);
 
