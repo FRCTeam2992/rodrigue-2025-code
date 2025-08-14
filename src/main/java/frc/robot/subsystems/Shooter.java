@@ -12,6 +12,7 @@
 
 package frc.robot.subsystems;
 
+import frc.robot.constants.Devices;
 import frc.robot.constants.ShooterConstants;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -60,7 +61,7 @@ public class Shooter extends SubsystemBase {
   *
   */
   public Shooter() {
-    mainShooterLead = new TalonFX(30);
+    mainShooterLead = new TalonFX(Devices.CANDeviceAddress.ShooterFlywheelLeader.id);
     mainShooterLeadConfig = new TalonFXConfiguration();
 
     // mainShooterLead.setInverted(true);
@@ -72,9 +73,9 @@ public class Shooter extends SubsystemBase {
     // mainShooterLead.config_kF(0, Constants.shooterPIDMainF);
     addChild("mainShooterLead", mainShooterLead);
 
-    mainShooterFollow = new TalonFX(31);
+    mainShooterFollow = new TalonFX(Devices.CANDeviceAddress.ShooterFlywheelFollower.id);
     mainShooterFollowConfig = new TalonFXConfiguration();
-    followLeadMotor = new Follower(30, true);
+    followLeadMotor = new Follower(Devices.CANDeviceAddress.ShooterFlywheelLeader.id, true);
 
     // mainShooterFollow.setInverted(false);
     // mainShooterFollow.setNeutralMode(NeutralMode.Coast);
@@ -86,7 +87,7 @@ public class Shooter extends SubsystemBase {
     // mainShooterFollow.config_kF(0, Constants.shooterPIDSecondaryF);
     addChild("mainShooterFollow", mainShooterFollow);
 
-    secondaryShooterLead = new TalonFX(32);
+    secondaryShooterLead = new TalonFX(Devices.CANDeviceAddress.ShooterBackspin.id);
     secondaryShooterLeadConfig = new TalonFXConfiguration();
 
     // secondaryShooterLead.setNeutralMode(NeutralMode.Coast);
