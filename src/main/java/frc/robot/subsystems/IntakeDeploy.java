@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeDeployConstants;
 import frc.robot.constants.ShooterHoodConstants;
+import frc.robot.constants.Devices;
 
 public class IntakeDeploy extends SubsystemBase {
   /** Creates a new IntakeDeploy. */
@@ -35,13 +36,13 @@ public class IntakeDeploy extends SubsystemBase {
   private int dashboardCounter = 0;
 
   public IntakeDeploy() {
-    intakeDeployMotor = new SparkMax(25, MotorType.kBrushless);
+    intakeDeployMotor = new SparkMax(Devices.CANDeviceAddress.ShooterFeed.id, MotorType.kBrushless);
     motorConfig = new SparkMaxConfig();
 
     this.buildMotorConfigs();
     this.applyMotorConfigs();
 
-    intakeLimitSwitch = new DigitalInput(2);
+    intakeLimitSwitch = new DigitalInput(Devices.RioRailDeviceAddress.ShooterFeedThroughbore.channel);
 
     intakePIDContorller = new PIDController(IntakeDeployConstants.intakeP, IntakeDeployConstants.intakeI, IntakeDeployConstants.intakeD);
     intakePIDContorller.setTolerance(ShooterHoodConstants.hoodTolerance);
