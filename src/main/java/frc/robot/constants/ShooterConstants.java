@@ -6,6 +6,11 @@ public class ShooterConstants {
     public static final double shooterMainRPMTolerance = 200.0;
     public static final double shooterSecondaryRPMTolerance = 150.0;
     public static final double shooterSpeedTolerance = 100;
+
+    // FIXME: Is this correct?
+    public static final double mainShooterGearRatio = 0.75;
+    public static final double secondaryShooterGearRatio = 1.0;
+    public static final double minutesToSeconds = 60.0;
     
     public static class PIDMain {
         public static final double kP = 0.1;
