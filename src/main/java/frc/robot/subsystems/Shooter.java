@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
+import frc.robot.constants.DebugConstants;
 import frc.robot.constants.Devices;
 import frc.robot.constants.ShooterConstants;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -9,6 +11,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
@@ -20,9 +23,25 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
  *
  */
 public class Shooter extends SubsystemBase {
+  public enum ShooterMode {
+    Stopped("Stopped"),
+    ManualSpin("Manual Spin"),
+    Shooting("Shooting");
+
+    public final String displayName;
+
+    private ShooterMode(String displayName) {
+      this.displayName = displayName;
+    }
+  }
+
+  private ShooterMode mode = ShooterMode.Stopped;
+
   private double mainShooterSetRPM = ShooterConstants.defaultMainShooterSpeed;
   private double secondaryShooterSetRPM = ShooterConstants.defaultSecondaryShooterSpeed;
-  private boolean shooterCommanded = false;
+
+  private double mainShooterManualPower = 0.0;
+  private double secondaryShooterManualPower = 0.0;
 
   private int dashboardCounter = 0;
 
@@ -36,6 +55,8 @@ public class Shooter extends SubsystemBase {
 
   private DutyCycleOut manualControlRequest;
   private VelocityDutyCycle velocityControlRequest;
+  private ControlRequest currentMainShooterRequest;
+  private ControlRequest currentSecondaryShooterRequest;
 
   /**
   *
@@ -74,6 +95,28 @@ public class Shooter extends SubsystemBase {
       applySecondaryMotorConfig();
     }
 
+    currentMainShooterRequest = manualControlRequest.withOutput(0.0);
+    currentSecondaryShooterRequest = manualControlRequest.withOutput(0.0);
+
+    switch (mode) {
+      case Stopped:
+        currentMainShooterRequest = manualControlRequest.withOutput(0.0);
+        currentSecondaryShooterRequest = manualControlRequest.withOutput(0.0);
+        break;
+      case Shooting:
+        double mainVelocity = calculateMotorVelocityRPSFromMechanismRPM(mainShooterSetRPM, ShooterConstants.mainShooterGearRatio);
+        double secondaryVelocity = calculateMotorVelocityRPSFromMechanismRPM(secondaryShooterSetRPM, ShooterConstants.secondaryShooterGearRatio);
+        currentMainShooterRequest = velocityControlRequest.withVelocity(mainVelocity);
+        currentSecondaryShooterRequest = velocityControlRequest.withVelocity(secondaryVelocity);
+        break;
+      case ManualSpin:
+        currentMainShooterRequest = manualControlRequest.withOutput(mainShooterManualPower);
+        currentSecondaryShooterRequest = manualControlRequest.withOutput(secondaryShooterManualPower);
+        break;        
+    }
+
+    mainShooterLeadMotor.setControl(currentMainShooterRequest);
+    secondaryShooterMotor.setControl(currentSecondaryShooterRequest);
     mainShooterFollowMotor.setControl(followLeadMotor);
 
     if (++dashboardCounter >= 5) {
@@ -88,95 +131,98 @@ public class Shooter extends SubsystemBase {
 
   }
 
-  public void setMainShooterPower(double speed) {
-    mainShooterLeadMotor.setControl(manualControlRequest.withOutput(speed));
+  public void setMode(ShooterMode newMode) {
+    this.mode = newMode;
   }
 
-  public void setSecondaryShooterPower(double speed) {
-    secondaryShooterMotor.setControl(manualControlRequest.withOutput(speed));
+  public void setMainShooterPower(double percentOutput) {
+    this.mainShooterManualPower = MathUtil.clamp(percentOutput, -1.0, 1.0);
   }
 
-  public void setMainShooterToTargetRPM() {
-    // TODO: What are these numbers?
-    double speed = (mainShooterSetRPM / 600.0) * 0.75;
-    setMainShooterRawVelocity(speed);
-  }
-
-  private void setMainShooterRawVelocity(double velocity) {
-    mainShooterLeadMotor.setControl(velocityControlRequest.withVelocity(velocity));
-  }
-
-  public void setSecondaryShooterToTargetRPM() {
-    // TODO: What are these numbers?
-    double speed = secondaryShooterSetRPM / 600.0;
-    setSecondaryShooterRawVelocity(speed);
-  }
-
-  private void setSecondaryShooterRawVelocity(double velocity) {
-    secondaryShooterMotor.setControl(velocityControlRequest.withVelocity(velocity));
+  public void setSecondaryShooterPower(double percentOutput) {
+    this.secondaryShooterManualPower = MathUtil.clamp(percentOutput, -1.0, 1.0);
   }
 
   public double getMainShooterRPM() {
-    // TODO: What are these numbers?
-    return (mainShooterLeadMotor.getVelocity().getValueAsDouble() * 600) / 0.75;
+    return calculateMechanismRPMFromMotorVelocityRPS(
+      mainShooterLeadMotor.getVelocity().getValueAsDouble(),
+      ShooterConstants.mainShooterGearRatio);
   }
 
   public double getSecondaryShooterRPM() {
-    // TODO: What are these numbers?
-    return (secondaryShooterMotor.getVelocity().getValueAsDouble() * 600);
-  }
-
-  public double getMainShooterTargetRPM() {
-    return mainShooterSetRPM;
+    return calculateMechanismRPMFromMotorVelocityRPS(
+      secondaryShooterMotor.getVelocity().getValueAsDouble(),
+      ShooterConstants.secondaryShooterGearRatio);
   }
 
   public void setMainShooterTargetRPM(double mainShooterSetSpeed) {
     this.mainShooterSetRPM = mainShooterSetSpeed;
   }
 
-  public double getSecondaryShooterTargetRPM() {
-    return secondaryShooterSetRPM;
-  }
-
   public void setSecondaryShooterTargetRPM(double secondaryShooterSetSpeed) {
     this.secondaryShooterSetRPM = secondaryShooterSetSpeed;
   }
 
-  public boolean atMainShooterRPM() {
-    return (Math.abs(getMainShooterTargetRPM() - getMainShooterRPM()) < ShooterConstants.shooterMainRPMTolerance);
+  public void updateMainShooterTargetRPM(double velocityChangeRPM) {
+    this.mainShooterSetRPM = mainShooterSetRPM + velocityChangeRPM;
   }
 
-  public boolean atSecondaryShooterRPM() {
-    return (Math.abs(getSecondaryShooterTargetRPM() - getSecondaryShooterRPM()) < ShooterConstants.shooterSecondaryRPMTolerance);
+  public void updateSecondaryShooterTargetRPM(double velocityChangeRPM) {
+    this.secondaryShooterSetRPM = secondaryShooterSetRPM + velocityChangeRPM;
+  }
+
+  public double getMainShooterTargetRPM() {
+    return mainShooterSetRPM;
+  }
+
+  public double getSecondaryShooterTargetRPM() {
+    return secondaryShooterSetRPM;
   }
 
   public boolean atShooterRPM() {
     return (atMainShooterRPM() && atSecondaryShooterRPM());
   }
 
-  public boolean isShooterCommanded() {
-    return shooterCommanded;
-  }
-
-  public void setShooterCommanded(boolean shooterCommanded) {
-    this.shooterCommanded = shooterCommanded;
-  }
-
   public void reset() {
-    setShooterCommanded(false);
+    this.mode = ShooterMode.Stopped;
+  }
+
+  private double calculateMotorVelocityRPSFromMechanismRPM(double velocityRPM, double gearRatio) {
+    // FIXME: What is the extra 10.0?
+    return (velocityRPM / (ShooterConstants.minutesToSeconds * 10.0)) * gearRatio;
+  }
+
+  private double calculateMechanismRPMFromMotorVelocityRPS(double velocityRPS, double gearRatio) {
+    // FIXME: What is the extra 10.0?
+    return (velocityRPS * (ShooterConstants.minutesToSeconds * 10.0)) / gearRatio;
+  }
+
+  private boolean atMainShooterRPM() {
+    return (Math.abs(getMainShooterTargetRPM() - getMainShooterRPM()) < ShooterConstants.shooterMainRPMTolerance);
+  }
+
+  private boolean atSecondaryShooterRPM() {
+    return (Math.abs(getSecondaryShooterTargetRPM() - getSecondaryShooterRPM()) < ShooterConstants.shooterSecondaryRPMTolerance);
   }
 
   private void publishTelemetry() {
     // Display the Shooter Set Speed and Current RPM
-    SmartDashboard.putNumber("Main Shooter Set Speed", mainShooterSetRPM);
-    SmartDashboard.putNumber("Main Shooter Current RPM", getMainShooterRPM());
+    SmartDashboard.putString("Shooter: Mode", this.mode.displayName);
+    SmartDashboard.putBoolean("Shooter: @Spd", atShooterRPM());
 
-    SmartDashboard.putNumber("Secondary Shooter Set Speed", secondaryShooterSetRPM);
-    SmartDashboard.putNumber("Secondary Shooter Current RPM", getSecondaryShooterRPM());
+    SmartDashboard.putNumber("Shooter: Mn Tgt RPM", mainShooterSetRPM);
+    SmartDashboard.putNumber("Shooter: Sc Tgt RPM", secondaryShooterSetRPM);
 
-    SmartDashboard.putBoolean("Main Shooter At Speed", atMainShooterRPM());
-    SmartDashboard.putBoolean("Secondary Shooter At Speed", atSecondaryShooterRPM());
-    SmartDashboard.putBoolean("Shooters at Speed", atShooterRPM());
+    if (DebugConstants.Logging.enableShooter) {
+      SmartDashboard.putNumber("Shooter: Sc Curr RPM", getSecondaryShooterRPM());
+      SmartDashboard.putNumber("Shooter: Mn Curr RPM", getMainShooterRPM());
+  
+      SmartDashboard.putBoolean("Shooter: Main @Spd", atMainShooterRPM());
+      SmartDashboard.putBoolean("Shooter: Sec @Spd", atSecondaryShooterRPM());
+  
+      SmartDashboard.putNumber("Shooter: Mn Man Pwr", mainShooterManualPower);
+      SmartDashboard.putNumber("Shooter: Sc Man Pwr", secondaryShooterManualPower);  
+    }
   }
 
   private TalonFXConfiguration setupMainShooterLeadMotorConfig() {
