@@ -8,15 +8,19 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Shooter.ShooterMode;
 
 public class RobotContainer {
   public final Turret turret;
+  public final Shooter shooter;
 
   public final CommandXboxController controllerA;
 
   public RobotContainer() {
     turret = new Turret();
+    shooter = new Shooter();
 
     controllerA = new CommandXboxController(0);
 
@@ -29,6 +33,44 @@ public class RobotContainer {
     controllerA.a().onFalse(new InstantCommand(() -> turret.stopTurret()));
     controllerA.b().whileTrue(new InstantCommand(() -> turret.setTurretSpeed(-0.15)));
     controllerA.b().onFalse(new InstantCommand(() -> turret.stopTurret()));
+
+    controllerA.leftBumper().onTrue(new InstantCommand(() -> {
+      shooter.setMainShooterPower(0.15);
+      shooter.setMode(ShooterMode.ManualSpin);
+    }));
+    controllerA.leftBumper().onFalse(new InstantCommand(() -> {
+      shooter.setMainShooterPower(0.0);
+    }));
+    controllerA.povUp().and(controllerA.leftBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterPower(0.05)));
+    controllerA.povDown().and(controllerA.leftBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterPower(-0.05)));
+
+    controllerA.rightBumper().onTrue(new InstantCommand(() -> {
+      shooter.setSecondaryShooterPower(0.15);
+      shooter.setMode(ShooterMode.ManualSpin);
+    }));
+    controllerA.rightBumper().onFalse(new InstantCommand(() -> {
+      shooter.setSecondaryShooterPower(0.0);
+    }));
+    controllerA.povUp().and(controllerA.rightBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterPower(0.05)));
+    controllerA.povDown().and(controllerA.rightBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterPower(-0.05)));
+    
+    controllerA.x().onTrue(new InstantCommand(() -> {
+      shooter.setMode(ShooterMode.Shooting);
+    }));
+
+    int increment = 500;
+
+    controllerA.povUp().and(controllerA.leftBumper().negate()).and(controllerA.rightBumper().negate())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(increment)));
+    controllerA.povDown().and(controllerA.leftBumper().negate()).and(controllerA.rightBumper().negate())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(-increment)));
+    controllerA.povRight().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(increment)));
+    controllerA.povLeft().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(-increment)));
+    controllerA.y().onTrue(new InstantCommand(() -> shooter.setMode(ShooterMode.Stopped)));
   }
 
   public Command getAutonomousCommand() {
