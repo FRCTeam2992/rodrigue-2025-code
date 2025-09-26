@@ -13,7 +13,6 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -45,17 +44,17 @@ public class Shooter extends SubsystemBase {
 
   private int dashboardCounter = 0;
 
-  private TalonFX mainShooterLeadMotor;
-  private TalonFXConfiguration mainShooterLeadConfig;
-  private TalonFX mainShooterFollowMotor;
-  private TalonFXConfiguration mainShooterFollowConfig;
-  private Follower followLeadMotor;
+  private TalonFX mainShooterMotor;
+  private TalonFXConfiguration mainShooterConfig;
   private TalonFX secondaryShooterMotor;
   private TalonFXConfiguration secondaryShooterConfig;
 
-  private DutyCycleOut manualControlRequest;
-  private VelocityDutyCycle velocityControlRequest;
+  private DutyCycleOut mainManualControlRequest;
+  private VelocityDutyCycle mainVelocityControlRequest;
   private ControlRequest currentMainShooterRequest;
+
+  private DutyCycleOut secondaryManualControlRequest;
+  private VelocityDutyCycle secondaryVelocityControlRequest;
   private ControlRequest currentSecondaryShooterRequest;
 
   /**
@@ -63,15 +62,11 @@ public class Shooter extends SubsystemBase {
   */
   public Shooter() {
     // Main shooter wheels
-    mainShooterLeadMotor = new TalonFX(Devices.CANDeviceAddress.ShooterFlywheelLeader.id);
-    mainShooterLeadConfig = setupMainShooterLeadMotorConfig();
-    addChild("mainShooterLead", mainShooterLeadMotor);
+    mainShooterMotor = new TalonFX(Devices.CANDeviceAddress.ShooterFlywheel.id);
+    mainShooterConfig = setupMainShooterMotorConfig();
+    addChild("mainShooterLead", mainShooterMotor);
 
-    mainShooterFollowConfig = setupMainShooterFollowMotorConfig();
-    mainShooterFollowMotor = new TalonFX(Devices.CANDeviceAddress.ShooterFlywheelFollower.id);
-    addChild("mainShooterFollow", mainShooterFollowMotor);
-
-    applyMainMotorConfigs();
+    applyMainMotorConfig();
 
     // Secondary (backspin) shooter wheels
     secondaryShooterConfig = setupSecondaryShooterMotorConfiguration();
@@ -81,43 +76,54 @@ public class Shooter extends SubsystemBase {
     applySecondaryMotorConfig();
 
     // Control requests
-    followLeadMotor = new Follower(Devices.CANDeviceAddress.ShooterFlywheelLeader.id, true);
-    manualControlRequest = new DutyCycleOut(0.0);
-    velocityControlRequest = new VelocityDutyCycle(0.0);
+    mainManualControlRequest = new DutyCycleOut(0.0);
+    mainVelocityControlRequest = new VelocityDutyCycle(0.0);
+    secondaryManualControlRequest = new DutyCycleOut(0.0);
+    secondaryVelocityControlRequest = new VelocityDutyCycle(0.0);
   }
 
   @Override
   public void periodic() {
-    if (mainShooterLeadMotor.hasResetOccurred() || mainShooterFollowMotor.hasResetOccurred()) {
-      applyMainMotorConfigs();
+    if (mainShooterMotor.hasResetOccurred()) {
+      applyMainMotorConfig();
     }
     if (secondaryShooterMotor.hasResetOccurred()) {
       applySecondaryMotorConfig();
     }
 
-    currentMainShooterRequest = manualControlRequest.withOutput(0.0);
-    currentSecondaryShooterRequest = manualControlRequest.withOutput(0.0);
+    currentMainShooterRequest = mainManualControlRequest.withOutput(0.0);
+    currentSecondaryShooterRequest = secondaryManualControlRequest.withOutput(0.0);
 
     switch (mode) {
       case Stopped:
-        currentMainShooterRequest = manualControlRequest.withOutput(0.0);
-        currentSecondaryShooterRequest = manualControlRequest.withOutput(0.0);
+        currentMainShooterRequest = mainManualControlRequest.withOutput(0.0);
+        currentSecondaryShooterRequest = secondaryManualControlRequest.withOutput(0.0);
         break;
       case Shooting:
-        double mainVelocity = calculateMotorVelocityRPSFromMechanismRPM(mainShooterSetRPM, ShooterConstants.mainShooterGearRatio);
-        double secondaryVelocity = calculateMotorVelocityRPSFromMechanismRPM(secondaryShooterSetRPM, ShooterConstants.secondaryShooterGearRatio);
-        currentMainShooterRequest = velocityControlRequest.withVelocity(mainVelocity);
-        currentSecondaryShooterRequest = velocityControlRequest.withVelocity(secondaryVelocity);
+        if (mainShooterSetRPM < ShooterConstants.minRPMThreshold) {
+          currentMainShooterRequest = mainManualControlRequest.withOutput(0.0);
+        } else {
+          double mainVelocity = calculateMotorVelocityRPSFromMechanismRPM(mainShooterSetRPM, ShooterConstants.mainShooterGearRatio);
+          currentMainShooterRequest = mainVelocityControlRequest.withVelocity(mainVelocity);
+        }
+        if (secondaryShooterSetRPM < ShooterConstants.minRPMThreshold) {
+          currentSecondaryShooterRequest = secondaryManualControlRequest.withOutput(0.0);
+        } else {
+          double secondaryVelocity = calculateMotorVelocityRPSFromMechanismRPM(secondaryShooterSetRPM, ShooterConstants.secondaryShooterGearRatio);
+          currentSecondaryShooterRequest = secondaryVelocityControlRequest.withVelocity(secondaryVelocity);
+        }
         break;
       case ManualSpin:
-        currentMainShooterRequest = manualControlRequest.withOutput(mainShooterManualPower);
-        currentSecondaryShooterRequest = manualControlRequest.withOutput(secondaryShooterManualPower);
-        break;        
+        currentMainShooterRequest = mainManualControlRequest.withOutput(mainShooterManualPower);
+        currentSecondaryShooterRequest = secondaryManualControlRequest.withOutput(secondaryShooterManualPower);
+        if (mainShooterManualPower == 0.0 && secondaryShooterManualPower == 0.0) {
+          this.mode = ShooterMode.Stopped;
+        }
+        break;
     }
 
-    mainShooterLeadMotor.setControl(currentMainShooterRequest);
+    mainShooterMotor.setControl(currentMainShooterRequest);
     secondaryShooterMotor.setControl(currentSecondaryShooterRequest);
-    mainShooterFollowMotor.setControl(followLeadMotor);
 
     if (++dashboardCounter >= 5) {
       publishTelemetry();
@@ -143,9 +149,17 @@ public class Shooter extends SubsystemBase {
     this.secondaryShooterManualPower = MathUtil.clamp(percentOutput, -1.0, 1.0);
   }
 
+  public void updateMainShooterPower(double powerIncrement) {
+    this.mainShooterManualPower = MathUtil.clamp(mainShooterManualPower + powerIncrement, -1.0, 1.0);
+  }
+
+  public void updateSecondaryShooterPower(double powerIncrement) {
+    this.secondaryShooterManualPower = MathUtil.clamp(secondaryShooterManualPower + powerIncrement, -1.0, 1.0);
+  }
+
   public double getMainShooterRPM() {
     return calculateMechanismRPMFromMotorVelocityRPS(
-      mainShooterLeadMotor.getVelocity().getValueAsDouble(),
+      mainShooterMotor.getVelocity().getValueAsDouble(),
       ShooterConstants.mainShooterGearRatio);
   }
 
@@ -188,13 +202,11 @@ public class Shooter extends SubsystemBase {
   }
 
   private double calculateMotorVelocityRPSFromMechanismRPM(double velocityRPM, double gearRatio) {
-    // FIXME: What is the extra 10.0?
-    return (velocityRPM / (ShooterConstants.minutesToSeconds * 10.0)) * gearRatio;
+    return (velocityRPM / (ShooterConstants.minutesToSeconds)) / gearRatio;
   }
 
   private double calculateMechanismRPMFromMotorVelocityRPS(double velocityRPS, double gearRatio) {
-    // FIXME: What is the extra 10.0?
-    return (velocityRPS * (ShooterConstants.minutesToSeconds * 10.0)) / gearRatio;
+    return (velocityRPS * (ShooterConstants.minutesToSeconds)) * gearRatio;
   }
 
   private boolean atMainShooterRPM() {
@@ -225,26 +237,11 @@ public class Shooter extends SubsystemBase {
     }
   }
 
-  private TalonFXConfiguration setupMainShooterLeadMotorConfig() {
+  private TalonFXConfiguration setupMainShooterMotorConfig() {
     return new TalonFXConfiguration()
       .withMotorOutput(new MotorOutputConfigs()
-        .withInverted(InvertedValue.Clockwise_Positive)
+        .withInverted(InvertedValue.CounterClockwise_Positive)
         .withNeutralMode(NeutralModeValue.Coast))
-      .withCurrentLimits(new CurrentLimitsConfigs()
-        .withSupplyCurrentLimit(40.0)
-        .withSupplyCurrentLowerLimit(60.0)
-        .withSupplyCurrentLowerTime(0.1)
-        .withSupplyCurrentLimitEnable(true))
-      .withSlot0(new Slot0Configs()
-        .withKP(ShooterConstants.PIDMain.kP)
-        .withKI(ShooterConstants.PIDMain.kI)
-        .withKD(ShooterConstants.PIDMain.kD)
-        .withKV(ShooterConstants.PIDMain.kV));
-  }
-
-  private TalonFXConfiguration setupMainShooterFollowMotorConfig() {
-    return new TalonFXConfiguration()
-      .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
       .withCurrentLimits(new CurrentLimitsConfigs()
         .withSupplyCurrentLimit(40.0)
         .withSupplyCurrentLowerLimit(60.0)
@@ -274,9 +271,8 @@ public class Shooter extends SubsystemBase {
         .withKV(ShooterConstants.PIDSecondary.kV));
   }
 
-  private void applyMainMotorConfigs() {
-    mainShooterLeadMotor.getConfigurator().apply(mainShooterLeadConfig);
-    mainShooterFollowMotor.getConfigurator().apply(mainShooterFollowConfig);
+  private void applyMainMotorConfig() {
+    mainShooterMotor.getConfigurator().apply(mainShooterConfig);
   }
 
   private void applySecondaryMotorConfig() {
