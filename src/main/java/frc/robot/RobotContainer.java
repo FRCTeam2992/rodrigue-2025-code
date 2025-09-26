@@ -38,21 +38,38 @@ public class RobotContainer {
       shooter.setMainShooterPower(0.15);
       shooter.setMode(ShooterMode.ManualSpin);
     }));
-    controllerA.leftBumper().onFalse(new InstantCommand(() -> shooter.setMode(ShooterMode.Stopped)));
+    controllerA.leftBumper().onFalse(new InstantCommand(() -> {
+      shooter.setMainShooterPower(0.0);
+    }));
+    controllerA.povUp().and(controllerA.leftBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterPower(0.05)));
+    controllerA.povDown().and(controllerA.leftBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterPower(-0.05)));
+
     controllerA.rightBumper().onTrue(new InstantCommand(() -> {
       shooter.setSecondaryShooterPower(0.15);
       shooter.setMode(ShooterMode.ManualSpin);
     }));
-    controllerA.rightBumper().onFalse(new InstantCommand(() -> shooter.setMode(ShooterMode.Stopped)));
+    controllerA.rightBumper().onFalse(new InstantCommand(() -> {
+      shooter.setSecondaryShooterPower(0.0);
+    }));
+    controllerA.povUp().and(controllerA.rightBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterPower(0.05)));
+    controllerA.povDown().and(controllerA.rightBumper())
+      .onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterPower(-0.05)));
+    
     controllerA.x().onTrue(new InstantCommand(() -> {
-      shooter.setMainShooterTargetRPM(2000);
-      shooter.setSecondaryShooterTargetRPM(2500);
       shooter.setMode(ShooterMode.Shooting);
     }));
-    controllerA.povUp().onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(50)));
-    controllerA.povDown().onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(-50)));
-    controllerA.povRight().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(50)));
-    controllerA.povLeft().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(-50)));
+
+    int increment = 500;
+
+    controllerA.povUp().and(controllerA.leftBumper().negate()).and(controllerA.rightBumper().negate())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(increment)));
+    controllerA.povDown().and(controllerA.leftBumper().negate()).and(controllerA.rightBumper().negate())
+      .onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(-increment)));
+    controllerA.povRight().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(increment)));
+    controllerA.povLeft().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(-increment)));
     controllerA.y().onTrue(new InstantCommand(() -> shooter.setMode(ShooterMode.Stopped)));
   }
 
