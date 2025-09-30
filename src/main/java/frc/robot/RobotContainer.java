@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
 import frc.robot.subsystems.Shooter.ShooterMode;
@@ -15,12 +16,14 @@ import frc.robot.subsystems.Shooter.ShooterMode;
 public class RobotContainer {
   public final Turret turret;
   public final Shooter shooter;
+  public final Intake intake;
 
   public final CommandXboxController controllerA;
 
   public RobotContainer() {
     turret = new Turret();
     shooter = new Shooter();
+    intake = new Intake();
 
     controllerA = new CommandXboxController(0);
 
@@ -60,6 +63,14 @@ public class RobotContainer {
     
     controllerA.x().onTrue(new InstantCommand(() -> {
       shooter.setMode(ShooterMode.Shooting);
+    }));
+
+
+    controllerA.leftTrigger(0.5).onTrue(new InstantCommand(() -> {
+      intake.setState(0.5, true);
+    }));
+    controllerA.leftTrigger(0.5).onFalse(new InstantCommand(() -> {
+      intake.setState(0.0, false);
     }));
 
     int increment = 500;
