@@ -14,6 +14,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Devices;
+import frc.robot.constants.IntakeConstants;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -36,10 +37,6 @@ public class Intake extends SubsystemBase {
     private TalonFXConfiguration intakeMotorConfigs;
     private DutyCycleOut manualControlRequest;
    
-    private boolean intakeDeployed = false;
-
-    private int dashboardCounter = 0;
-
     private boolean intakeCommanded = false;                 // Did driver request intake running
     private double speedCommanded = 0;                       // Requested speed
 
@@ -49,27 +46,19 @@ public class Intake extends SubsystemBase {
         intakeMotorConfigs = new TalonFXConfiguration();
         manualControlRequest = new DutyCycleOut(0.0);
 
-        intakeMotor.setNeutralMode(NeutralModeValue.Brake);
-
         this.buildMotorConfigs();
         this.applyMotorConfigs();
 
-        // intakeMotor.setInverted(false);
-        // intakeMotor.setStatusFramePeriod(1, 255);
-        // this.intakeMotor.getPosition().setUpdateFrequency(1000.0/255.0); // <--- Phoenix 6 version of above line
-        // intakeMotor.setStatusFramePeriod(2, 254);
-        // intakeMotor.setStatusFramePeriod(3, 253);
-        // intakeMotor.setStatusFramePeriod(4, 252);
-        // intakeMotor.setStatusFramePeriod(8, 251);
-        // intakeMotor.setStatusFramePeriod(10, 250);
-        // intakeMotor.setStatusFramePeriod(12, 249);
-        // intakeMotor.setStatusFramePeriod(13, 248);
-        // intakeMotor.setStatusFramePeriod(14, 247);
-        // intakeMotor.setStatusFramePeriod(21, 246);
+        intakeMotor.setNeutralMode(NeutralModeValue.Brake);
+
         addChild("Intake Motor", intakeMotor);
     }
 
     private void buildMotorConfigs() {
+      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLimit = IntakeConstants.supplyCurrentLimit;
+      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLowerLimit = IntakeConstants.supplyCurrentLowerLimit;
+      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLowerTime = IntakeConstants.supplyCurrentLowerTime;
+      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLimitEnable = IntakeConstants.supplyCurrentEnabled;
       this.intakeMotorConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     }
 
@@ -79,29 +68,17 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
-        // if (++dashboardCounter >= 5) {
-        //     // SmartDashboard.putNumber("Intake Motor Speed", speedCommanded);
-        //     // SmartDashboard.putBoolean("Intake Commanded", intakeCommanded);
-        //     dashboardCounter = 0;
-        // }
-
+        if (intakeCommanded) {
+            intakeMotor.setControl(manualControlRequest.withOutput(speedCommanded));
+        } else {
+            intakeMotor.setControl(manualControlRequest.withOutput(0.0));
+        }
     }
 
     @Override
     public void simulationPeriodic() {
         // This method will be called once per scheduler run when in simulation
 
-    }
-
-    // Put methods for controlling this subsystem
-    public boolean getIntakePosition() {
-        return intakeDeployed;
-    }
-
-    public void setIntakeSpeed(double speed) {
-        // intakeMotor.set(ControlMode.PercentOutput, speed);
-        intakeMotor.setControl(manualControlRequest.withOutput(speed));
     }
 
     public void setIntakeCommanded (boolean commanded) {
@@ -118,6 +95,11 @@ public class Intake extends SubsystemBase {
 
     public void setSpeedCommanded(double speedCommanded) {
         this.speedCommanded = speedCommanded;
+    }
+
+    public void setState(double speedCommanded, boolean commanded) {
+        this.speedCommanded = speedCommanded;
+        this.intakeCommanded = commanded;
     }
 
     public void reset() {
