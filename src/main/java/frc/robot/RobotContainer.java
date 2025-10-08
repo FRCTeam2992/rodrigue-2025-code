@@ -67,7 +67,7 @@ public class RobotContainer {
 
 
     controllerA.leftTrigger(0.5).onTrue(new InstantCommand(() -> {
-      intake.setState(0.5, true);
+      intake.setState(0.2, true);
     }));
     controllerA.leftTrigger(0.5).onFalse(new InstantCommand(() -> {
       intake.setState(0.0, false);
