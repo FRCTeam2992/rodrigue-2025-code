@@ -21,10 +21,6 @@ import frc.robot.constants.IntakeConstants;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 
-// import com.ctre.phoenix.motorcontrol.ControlMode;
-// import com.ctre.phoenix.motorcontrol.NeutralMode;
-
-// import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -54,7 +50,6 @@ public class Intake extends SubsystemBase {
 
     private IntakeMode mode = IntakeMode.Stopped;
 
-    // private boolean intakeCommanded = false; // Did driver request intake running
     private double speed = 0; // Requested speed
 
     private double dashboardCounter = 0;
@@ -99,15 +94,9 @@ public class Intake extends SubsystemBase {
                 break;
         }
 
-        // if (intakeCommanded) {
-        //     intakeMotor.setControl(manualControlRequest.withOutput(speedCommanded)); 
-        // } else {
-        //     intakeMotor.setControl(manualControlRequest.withOutput(0.0));
-        // }
 
         if (DebugConstants.Logging.enableIntake && ++dashboardCounter >= 5) {
             // Update Dashboard
-            // SmartDashboard.putBoolean("Intake: On", intakeCommanded);
             SmartDashboard.putString("Intake: Mode", mode.displayName);
             SmartDashboard.putNumber("Intake: Power", speed);
 
