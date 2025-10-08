@@ -12,7 +12,9 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.DebugConstants;
 import frc.robot.constants.Devices;
 import frc.robot.constants.IntakeConstants;
 
@@ -39,6 +41,8 @@ public class Intake extends SubsystemBase {
    
     private boolean intakeCommanded = false;                 // Did driver request intake running
     private double speedCommanded = 0;                       // Requested speed
+
+    private double dashboardCounter = 0;
 
     public Intake() {
 
@@ -72,6 +76,14 @@ public class Intake extends SubsystemBase {
             intakeMotor.setControl(manualControlRequest.withOutput(speedCommanded));
         } else {
             intakeMotor.setControl(manualControlRequest.withOutput(0.0));
+        }
+        
+        if (DebugConstants.Logging.enableIntake && ++dashboardCounter >= 5) {
+            // Update Dashboard
+            SmartDashboard.putBoolean("Intake: On", intakeCommanded);
+            SmartDashboard.putNumber("Intake: Power", speedCommanded);
+
+            dashboardCounter = 0;
         }
     }
 

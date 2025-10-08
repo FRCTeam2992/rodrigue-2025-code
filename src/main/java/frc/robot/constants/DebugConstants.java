@@ -5,5 +5,6 @@ public class DebugConstants {
         public static boolean enableRobot = false;
         public static boolean enableTurret = false;
         public static boolean enableShooter = false;
+        public static boolean enableIntake = true;
     }
 }
