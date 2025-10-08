@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Intake.IntakeMode;
 import frc.robot.subsystems.Shooter.ShooterMode;
 
 public class RobotContainer {
@@ -67,10 +68,10 @@ public class RobotContainer {
 
 
     controllerA.leftTrigger(0.5).onTrue(new InstantCommand(() -> {
-      intake.setState(0.2, true);
+      intake.setState(0.2, IntakeMode.ManualSpin);
     }));
     controllerA.leftTrigger(0.5).onFalse(new InstantCommand(() -> {
-      intake.setState(0.0, false);
+      intake.setState(0.0, IntakeMode.Stopped);
     }));
 
     int increment = 500;

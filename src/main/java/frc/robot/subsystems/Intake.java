@@ -34,13 +34,28 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
  */
 public class Intake extends SubsystemBase {
 
-
     private TalonFX intakeMotor;
     private TalonFXConfiguration intakeMotorConfigs;
     private DutyCycleOut manualControlRequest;
-   
-    private boolean intakeCommanded = false;                 // Did driver request intake running
-    private double speedCommanded = 0;                       // Requested speed
+
+    public enum IntakeMode {
+
+        Stopped("Stopped"),
+        ManualSpin("Manual Spin"),
+        Intaking("Intaking");
+
+        public final String displayName;
+
+        private IntakeMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+    }
+
+    private IntakeMode mode = IntakeMode.Stopped;
+
+    // private boolean intakeCommanded = false; // Did driver request intake running
+    private double speed = 0; // Requested speed
 
     private double dashboardCounter = 0;
 
@@ -59,29 +74,42 @@ public class Intake extends SubsystemBase {
     }
 
     private void buildMotorConfigs() {
-      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLimit = IntakeConstants.supplyCurrentLimit;
-      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLowerLimit = IntakeConstants.supplyCurrentLowerLimit;
-      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLowerTime = IntakeConstants.supplyCurrentLowerTime;
-      this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLimitEnable = IntakeConstants.supplyCurrentEnabled;
-      this.intakeMotorConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLimit = IntakeConstants.supplyCurrentLimit;
+        this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLowerLimit = IntakeConstants.supplyCurrentLowerLimit;
+        this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLowerTime = IntakeConstants.supplyCurrentLowerTime;
+        this.intakeMotorConfigs.CurrentLimits.SupplyCurrentLimitEnable = IntakeConstants.supplyCurrentEnabled;
+        this.intakeMotorConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     }
 
     private void applyMotorConfigs() {
-      this.intakeMotor.getConfigurator().apply(this.intakeMotorConfigs);
+        this.intakeMotor.getConfigurator().apply(this.intakeMotorConfigs);
     }
 
     @Override
     public void periodic() {
-        if (intakeCommanded) {
-            intakeMotor.setControl(manualControlRequest.withOutput(speedCommanded));
-        } else {
+        switch (mode) {
+            case Stopped:
             intakeMotor.setControl(manualControlRequest.withOutput(0.0));
+                break;
+            case ManualSpin:
+            intakeMotor.setControl(manualControlRequest.withOutput(speed));
+                break;
+            case Intaking:
+
+                break;
         }
-        
+
+        // if (intakeCommanded) {
+        //     intakeMotor.setControl(manualControlRequest.withOutput(speedCommanded)); 
+        // } else {
+        //     intakeMotor.setControl(manualControlRequest.withOutput(0.0));
+        // }
+
         if (DebugConstants.Logging.enableIntake && ++dashboardCounter >= 5) {
             // Update Dashboard
-            SmartDashboard.putBoolean("Intake: On", intakeCommanded);
-            SmartDashboard.putNumber("Intake: Power", speedCommanded);
+            // SmartDashboard.putBoolean("Intake: On", intakeCommanded);
+            SmartDashboard.putString("Intake: Mode", mode.displayName);
+            SmartDashboard.putNumber("Intake: Power", speed);
 
             dashboardCounter = 0;
         }
@@ -93,29 +121,29 @@ public class Intake extends SubsystemBase {
 
     }
 
-    public void setIntakeCommanded (boolean commanded) {
-        intakeCommanded = commanded;
+    public void setMode(IntakeMode newMode) {
+        mode = newMode;
     }
 
-    public boolean getIntakeCommanded () {
-        return intakeCommanded;
+    public IntakeMode getMode() {
+        return mode;
     }
 
-    public double getSpeedCommanded() {
-        return speedCommanded;
+    public double getSpeed() {
+        return speed;
     }
 
-    public void setSpeedCommanded(double speedCommanded) {
-        this.speedCommanded = speedCommanded;
+    public void setSpeed(double speedCommanded) {
+        this.speed = speedCommanded;
     }
 
-    public void setState(double speedCommanded, boolean commanded) {
-        this.speedCommanded = speedCommanded;
-        this.intakeCommanded = commanded;
+    public void setState(double speedCommanded, IntakeMode newMode) {
+        this.speed = speedCommanded;
+        this.mode = newMode;
     }
 
     public void reset() {
-        setIntakeCommanded(false);
-        setSpeedCommanded(0.0);
+        setMode(IntakeMode.Stopped);
+        setSpeed(0.0);
     }
 }
