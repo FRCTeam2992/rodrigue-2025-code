@@ -5,6 +5,19 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public class DriveConstants {
+
+    // Drive Joystick Variables
+    public static final boolean isFieldCentric = true;
+    public static final boolean isVelocityControlled = true;
+    public static final boolean isGyroCorrected = true;
+    public static final double joystickDeadband = 0.1;
+    public static double joystickXYSmoothFactor = 0.5;
+    public static double joystickRotationSmoothFactor = 0.5;
+    public static double joystickRotationInverseDeadband = 0.14;
+
+    // Swerve Gyro Correction
+    public static final double driveGyroP = 0.005;
+
     public static class DriveMotors {
         // Motor Base Config
         public static final boolean inverted = true;
