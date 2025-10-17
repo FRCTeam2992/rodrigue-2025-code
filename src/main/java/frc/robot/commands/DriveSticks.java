@@ -45,9 +45,9 @@ public class DriveSticks extends Command {
     double y1;
     double x2;
 
-    x1 = -mController.getRightX();
-    y1 = -mController.getRightY();
-    x2 = -mController.getLeftX();
+    x1 = -mController.getLeftX();
+    y1 = -mController.getLeftY();
+    x2 = -mController.getRightX();
 
     // Get the Joystick Magnitude
     double xyMagnitude = Math.sqrt((x1 * x1) + (y1 * y1));

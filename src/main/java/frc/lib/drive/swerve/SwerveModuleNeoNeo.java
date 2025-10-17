@@ -2,33 +2,38 @@ package frc.lib.drive.swerve;
 
 
 
-import edu.wpi.first.wpilibj.AnalogInput;
+import static edu.wpi.first.units.Units.Degrees;
 
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.measure.Angle;
 
 public class SwerveModuleNeoNeo {
 
     // Saved Variables
     private SparkMax driveMotor;
     private SparkMax turnMotor;
-    private AnalogInput encoderInput;
+    private CANcoder encoderInput;
+    private StatusSignal<Angle> encoderAbsPosition;
     private double encoderOffset;
     private PIDController turnPID;
     private double wheelDiameter;
     private double wheelGearRatio;
     private double maxDriveSpeed;
 
-    public SwerveModuleNeoNeo(SparkMax driveMotor, SparkMax turnMotor, AnalogInput encoderInput, double encoderOffset,
+    public SwerveModuleNeoNeo(SparkMax driveMotor, SparkMax turnMotor, CANcoder encoderInput, double encoderOffset,
             PIDController turnPID, double wheelDiameter, double wheelGearRatio, double maxDriveSpeed) {
         // Saved Variables
         this.driveMotor = driveMotor;
         this.turnMotor = turnMotor;
         this.encoderInput = encoderInput;
+        this.encoderAbsPosition = this.encoderInput.getAbsolutePosition();
         this.encoderOffset = encoderOffset;
         this.turnPID = turnPID;
         this.wheelDiameter = wheelDiameter;
@@ -96,7 +101,7 @@ public class SwerveModuleNeoNeo {
     }
 
     public double getEncoderAngle() {
-        double tempAngle = (encoderInput.getVoltage() * (360.0 / 5.0)) - encoderOffset;
+        double tempAngle = encoderAbsPosition.getValue().in(Degrees) - encoderOffset;
 
         tempAngle -= 180.0;
 
@@ -107,6 +112,10 @@ public class SwerveModuleNeoNeo {
         }
 
         return -tempAngle;
+    }
+
+    public void refreshEncoderPosition() {
+        encoderAbsPosition.refresh();
     }
 
     public double getWheelSpeedMeters() {
