@@ -32,4 +32,13 @@ public class SpeedConstants {
         public static final double leftPower = -0.15;
         public static final double rightPower = 0.15;
     }
+
+    public static class Hood {
+        public static final double upPower = 0.25;
+        public static final double downPower = -0.2;
+        public static final double minPower = -0.2;
+        public static final double maxPower = 0.25;
+        public static final double minSlowModePower = -0.08;
+        public static final double maxSlowModePower = 0.13;
+    }
 }
