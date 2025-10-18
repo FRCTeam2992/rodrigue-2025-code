@@ -3,7 +3,7 @@ package frc.robot.triggers;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
-import frc.robot.constants.ShooterConstants;
+import frc.robot.constants.SpeedConstants;
 import frc.robot.subsystems.Feeder.FeederMode;
 import frc.robot.subsystems.Intake.IntakeMode;
 import frc.robot.subsystems.Shooter.ShooterMode;
@@ -116,19 +116,19 @@ public class CompetitionControllers {
 
         controllerA.povUp().and(controllerA.rightBumper()).onTrue(new InstantCommand(() -> {
             // Increment main shooter speed
-            this.robotContainer.shooter.updateMainShooterTargetRPM(ShooterConstants.shooterSpeedIncrementRPM);
+            this.robotContainer.shooter.updateMainShooterTargetRPM(SpeedConstants.Shooting.shooterSpeedIncrementRPM);
         }));
         controllerA.povDown().and(controllerA.rightBumper()).onTrue(new InstantCommand(() -> {
             // Decrement main shooter speed
-            this.robotContainer.shooter.updateMainShooterTargetRPM(-ShooterConstants.shooterSpeedIncrementRPM);
+            this.robotContainer.shooter.updateMainShooterTargetRPM(-SpeedConstants.Shooting.shooterSpeedIncrementRPM);
         }));
         controllerA.povRight().and(controllerA.rightBumper()).onTrue(new InstantCommand(() -> {
             // Increment secondary shooter speed
-            this.robotContainer.shooter.updateSecondaryShooterTargetRPM(ShooterConstants.shooterSpeedIncrementRPM);
+            this.robotContainer.shooter.updateSecondaryShooterTargetRPM(SpeedConstants.Shooting.shooterSpeedIncrementRPM);
         }));
         controllerA.povLeft().and(controllerA.rightBumper()).onTrue(new InstantCommand(() -> {
             // Decrement secondary shooter speed
-            this.robotContainer.shooter.updateSecondaryShooterTargetRPM(-ShooterConstants.shooterSpeedIncrementRPM);
+            this.robotContainer.shooter.updateSecondaryShooterTargetRPM(-SpeedConstants.Shooting.shooterSpeedIncrementRPM);
         }));
 
         controllerA.start().onTrue(new InstantCommand(() -> {
