@@ -97,15 +97,19 @@ public class CompetitionControllers {
 
         controllerA.povUp().and(controllerA.rightBumper().negate()).onTrue(new InstantCommand(() -> {
             // Hood up
+            this.robotContainer.hood.setHoodSpeed(SpeedConstants.Hood.upPower);
         }));
         controllerA.povUp().and(controllerA.rightBumper().negate()).onFalse(new InstantCommand(() -> {
             // Stop hood on release
+            this.robotContainer.hood.stopHood();
         }));
         controllerA.povDown().and(controllerA.rightBumper().negate()).onTrue(new InstantCommand(() -> {
             // Hood down
+            this.robotContainer.hood.setHoodSpeed(SpeedConstants.Hood.downPower);
         }));
         controllerA.povDown().and(controllerA.rightBumper().negate()).onFalse(new InstantCommand(() -> {
             // Stop hood on release
+            this.robotContainer.hood.stopHood();
         }));
         controllerA.povRight().and(controllerA.rightBumper().negate()).onTrue(new InstantCommand(() -> {
             // Turret right

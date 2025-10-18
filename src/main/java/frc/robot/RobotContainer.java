@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Funnel;
+import frc.robot.subsystems.Hood;
 import frc.robot.commands.DriveSticks;
 import frc.robot.constants.DebugConstants;
 import frc.robot.subsystems.DriveTrain;
@@ -25,6 +26,7 @@ public class RobotContainer {
   public final Intake intake;
   public final Feeder feeder;
   public final Funnel funnel;
+  public final Hood hood;
   public final DriveTrain drivetrain;
 
   public final CommandXboxController controllerA;
@@ -40,6 +42,7 @@ public class RobotContainer {
     intake = new Intake();
     feeder = new Feeder();
     funnel = new Funnel();
+    hood = new Hood();
     drivetrain = new DriveTrain();
 
     controllerA = new CommandXboxController(0);
