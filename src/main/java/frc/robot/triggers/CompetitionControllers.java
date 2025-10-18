@@ -48,6 +48,12 @@ public class CompetitionControllers {
         }));
         controllerA.x().onTrue(new InstantCommand(() -> {
             // start auto-intake
+            this.robotContainer.intake.setState(SpeedConstants.AutoIntake.intakePower, IntakeMode.ManualSpin);
+            this.robotContainer.feeder.setState(SpeedConstants.AutoIntake.feederPower, FeederMode.AutoFeed);
+            this.robotContainer.funnel.setState(SpeedConstants.AutoIntake.funnelPower, FunnelMode.ManualFeed);
+        }));
+        (triggers.ballSeen.and(controllerA.rightTrigger(0.6).negate())).onTrue(new InstantCommand(() -> {
+            this.robotContainer.funnel.setState(0.0, FunnelMode.Stopped);
         }));
         controllerA.y().onTrue(new InstantCommand(() -> {
             // start shooter
