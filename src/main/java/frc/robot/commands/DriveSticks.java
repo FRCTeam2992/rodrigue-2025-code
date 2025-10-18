@@ -158,7 +158,7 @@ public class DriveSticks extends Command {
 
       // Check for Field Centric Enabled
       if (DriveConstants.isFieldCentric) {
-        swerveStates = mDriveTrain.swerveController.calculate(x1, y1, x2, gyroValue + 180.0);
+        swerveStates = mDriveTrain.swerveController.calculate(x1, y1, x2, gyroValue);
       } else {
         swerveStates = mDriveTrain.swerveController.calculate(x1, y1, x2);
       }

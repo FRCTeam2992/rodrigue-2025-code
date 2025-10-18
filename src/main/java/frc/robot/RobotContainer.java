@@ -88,6 +88,8 @@ public class RobotContainer {
     controllerA.povRight().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(increment)));
     controllerA.povLeft().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(-increment)));
     controllerA.y().onTrue(new InstantCommand(() -> shooter.setMode(ShooterMode.Stopped)));
+
+    controllerA.start().onTrue(new InstantCommand(() -> drivetrain.resetGyro()));
   }
 
   public Command getAutonomousCommand() {

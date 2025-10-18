@@ -18,6 +18,12 @@ public class Robot extends TimedRobot {
   }
 
   @Override
+  public void robotInit() {
+    super.robotInit();
+    m_robotContainer.drivetrain.resetGyro();
+  }
+
+  @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
   }

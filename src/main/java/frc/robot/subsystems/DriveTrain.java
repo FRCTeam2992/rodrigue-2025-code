@@ -272,6 +272,10 @@ public class DriveTrain extends SubsystemBase {
         rearRightEncoder.getConfigurator().apply(config);
     }
 
+    public void resetGyro() {
+        navx.reset();
+    }
+
     public void stopDrive() {
         frontLeftModule.stop();
         frontRightModule.stop();

@@ -8,12 +8,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 public class DriveConstants {
 
     // Drive Joystick Variables
-    public static final boolean isFieldCentric = false;
+    public static final boolean isFieldCentric = true;
     public static final boolean isVelocityControlled = true;
     public static final boolean isGyroCorrected = false;
-    public static final double joystickDeadband = 0.1;
-    public static double joystickXYSmoothFactor = 0.5;
-    public static double joystickRotationSmoothFactor = 0.5;
+    public static final double joystickDeadband = 0.15;
+    public static double joystickXYSmoothFactor = 0.9;
+    public static double joystickRotationSmoothFactor = 0.9;
     public static double joystickRotationInverseDeadband = 0.14;
 
     // Swerve Gyro Correction
