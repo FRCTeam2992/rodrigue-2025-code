@@ -41,4 +41,9 @@ public class SpeedConstants {
         public static final double minSlowModePower = -0.08;
         public static final double maxSlowModePower = 0.13;
     }
+
+    public static class Feeder {
+        public static double autoAdvanceThresholdSeconds = 1.1;
+        public static double autoAdvanceSpeed = 0.15;
+    }
 }
