@@ -7,7 +7,8 @@ public class DebugConstants {
         public static boolean enableShooter = false;
         public static boolean enableIntake = false;
         public static boolean enableFeeder = false;
-        public static boolean enableFunnel = true;
+        public static boolean enableFunnel = false;
+        public static boolean enableHood = true;
         public static boolean enableDrive = false;
     }
 
