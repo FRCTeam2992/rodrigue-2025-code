@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import frc.robot.constants.DebugConstants;
 import frc.robot.constants.Devices;
 import frc.robot.constants.ShooterConstants;
+import frc.robot.constants.SpeedConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -38,8 +39,8 @@ public class Shooter extends SubsystemBase {
   private ShooterMode mode = ShooterMode.Stopped;
   private ShooterMode priorMode = ShooterMode.Stopped;
 
-  private double mainShooterSetRPM = ShooterConstants.defaultMainShooterSpeed;
-  private double secondaryShooterSetRPM = ShooterConstants.defaultSecondaryShooterSpeed;
+  private double mainShooterSetRPM = SpeedConstants.Shooting.defaultMainShooterSpeed;
+  private double secondaryShooterSetRPM = SpeedConstants.Shooting.defaultSecondaryShooterSpeed;
 
   private double mainShooterManualPower = 0.0;
   private double secondaryShooterManualPower = 0.0;

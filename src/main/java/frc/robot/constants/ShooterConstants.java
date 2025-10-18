@@ -1,14 +1,10 @@
 package frc.robot.constants;
 
 public class ShooterConstants {
-    public static final double defaultMainShooterSpeed = 1000; // 2700;
-    public static final double defaultSecondaryShooterSpeed = 1000; // 3300;
     public static final double shooterMainRPMTolerance = 200.0;
     public static final double shooterSecondaryRPMTolerance = 150.0;
     public static final double shooterSpeedTolerance = 100;
     public static final double minRPMThreshold = 250;
-
-    public static final double shooterSpeedIncrementRPM = 500;
 
     public static final double mainShooterGearRatio = 0.75;
     public static final double secondaryShooterGearRatio = 1.0;
