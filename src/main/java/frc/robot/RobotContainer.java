@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.DriveSticks;
+import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
@@ -18,6 +20,7 @@ public class RobotContainer {
   public final Turret turret;
   public final Shooter shooter;
   public final Intake intake;
+  public final DriveTrain drivetrain;
 
   public final CommandXboxController controllerA;
 
@@ -25,8 +28,10 @@ public class RobotContainer {
     turret = new Turret();
     shooter = new Shooter();
     intake = new Intake();
+    drivetrain = new DriveTrain();
 
     controllerA = new CommandXboxController(0);
+    drivetrain.setDefaultCommand(new DriveSticks(drivetrain, controllerA));
 
     configureBindings();
   }
@@ -83,6 +88,8 @@ public class RobotContainer {
     controllerA.povRight().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(increment)));
     controllerA.povLeft().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(-increment)));
     controllerA.y().onTrue(new InstantCommand(() -> shooter.setMode(ShooterMode.Stopped)));
+
+    controllerA.start().onTrue(new InstantCommand(() -> drivetrain.resetGyro()));
   }
 
   public Command getAutonomousCommand() {
