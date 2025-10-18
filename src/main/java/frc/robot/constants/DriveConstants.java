@@ -10,7 +10,7 @@ public class DriveConstants {
     // Drive Joystick Variables
     public static final boolean isFieldCentric = true;
     public static final boolean isVelocityControlled = true;
-    public static final boolean isGyroCorrected = false;
+    public static final boolean isGyroCorrected = true;
     public static final double joystickDeadband = 0.15;
     public static double joystickXYSmoothFactor = 0.9;
     public static double joystickRotationSmoothFactor = 0.9;
