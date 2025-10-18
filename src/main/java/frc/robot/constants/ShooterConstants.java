@@ -8,6 +8,8 @@ public class ShooterConstants {
     public static final double shooterSpeedTolerance = 100;
     public static final double minRPMThreshold = 250;
 
+    public static final double shooterSpeedIncrementRPM = 500;
+
     public static final double mainShooterGearRatio = 0.75;
     public static final double secondaryShooterGearRatio = 1.0;
     public static final double minutesToSeconds = 60.0;

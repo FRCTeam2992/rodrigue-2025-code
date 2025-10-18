@@ -4,6 +4,7 @@ import frc.robot.constants.DebugConstants;
 import frc.robot.constants.Devices;
 import frc.robot.constants.ShooterConstants;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -35,12 +36,16 @@ public class Shooter extends SubsystemBase {
   }
 
   private ShooterMode mode = ShooterMode.Stopped;
+  private ShooterMode priorMode = ShooterMode.Stopped;
 
   private double mainShooterSetRPM = ShooterConstants.defaultMainShooterSpeed;
   private double secondaryShooterSetRPM = ShooterConstants.defaultSecondaryShooterSpeed;
 
   private double mainShooterManualPower = 0.0;
   private double secondaryShooterManualPower = 0.0;
+
+  private Timer shooterStartTimer = new Timer();
+  private final double shooterStartTimeThresholdSeconds = 2.0;
 
   private int dashboardCounter = 0;
 
@@ -94,6 +99,20 @@ public class Shooter extends SubsystemBase {
     currentMainShooterRequest = mainManualControlRequest.withOutput(0.0);
     currentSecondaryShooterRequest = secondaryManualControlRequest.withOutput(0.0);
 
+    if (mode != priorMode) {
+      // Transition into new state
+      switch (mode) {
+        case Stopped:
+        case ManualSpin:
+          shooterStartTimer.stop();
+          shooterStartTimer.reset();
+          break;
+        case Shooting:
+          shooterStartTimer.restart();
+          break;
+      }
+    }
+
     switch (mode) {
       case Stopped:
         currentMainShooterRequest = mainManualControlRequest.withOutput(0.0);
@@ -121,6 +140,8 @@ public class Shooter extends SubsystemBase {
         }
         break;
     }
+
+    priorMode = mode;
 
     mainShooterMotor.setControl(currentMainShooterRequest);
     secondaryShooterMotor.setControl(currentSecondaryShooterRequest);
@@ -197,6 +218,10 @@ public class Shooter extends SubsystemBase {
     return (atMainShooterRPM() && atSecondaryShooterRPM());
   }
 
+  public boolean readyToShoot() {
+    return mode == ShooterMode.Shooting && (atShooterRPM() || shooterStartTimer.get() >= shooterStartTimeThresholdSeconds);
+  }
+
   public void reset() {
     this.mode = ShooterMode.Stopped;
   }
@@ -221,6 +246,7 @@ public class Shooter extends SubsystemBase {
     // Display the Shooter Set Speed and Current RPM
     SmartDashboard.putString("Shooter: Mode", this.mode.displayName);
     SmartDashboard.putBoolean("Shooter: @Spd", atShooterRPM());
+    SmartDashboard.putBoolean("Shooter: Ready", readyToShoot());
 
     SmartDashboard.putNumber("Shooter: Mn Tgt RPM", mainShooterSetRPM);
     SmartDashboard.putNumber("Shooter: Sc Tgt RPM", secondaryShooterSetRPM);
@@ -234,6 +260,8 @@ public class Shooter extends SubsystemBase {
   
       SmartDashboard.putNumber("Shooter: Mn Man Pwr", mainShooterManualPower);
       SmartDashboard.putNumber("Shooter: Sc Man Pwr", secondaryShooterManualPower);  
+
+      SmartDashboard.putNumber("Shooter: Start Timer", shooterStartTimer.get());
     }
   }
 

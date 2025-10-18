@@ -6,17 +6,17 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Feeder;
-import frc.robot.subsystems.Feeder.FeederMode;
 import frc.robot.commands.DriveSticks;
+import frc.robot.constants.DebugConstants;
 import frc.robot.subsystems.DriveTrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Turret;
-import frc.robot.subsystems.Intake.IntakeMode;
-import frc.robot.subsystems.Shooter.ShooterMode;
+import frc.robot.triggers.CompetitionControllers;
+import frc.robot.triggers.RobotTriggers;
+import frc.robot.triggers.TestControllers;
 
 public class RobotContainer {
   public final Turret turret;
@@ -26,6 +26,11 @@ public class RobotContainer {
   public final DriveTrain drivetrain;
 
   public final CommandXboxController controllerA;
+
+  public final TestControllers testControllerMappings;
+  public final CompetitionControllers competitionControllerMappings;
+
+  public final RobotTriggers robotTriggers;
 
   public RobotContainer() {
     turret = new Turret();
@@ -37,66 +42,16 @@ public class RobotContainer {
     controllerA = new CommandXboxController(0);
     drivetrain.setDefaultCommand(new DriveSticks(drivetrain, controllerA));
 
-    configureBindings();
-  }
+    robotTriggers = new RobotTriggers(this);
+    robotTriggers.setupRobotTriggers();
 
-  private void configureBindings() {
-    // Powers are clamped. Check TurretConstants.Limits
-    controllerA.a().whileTrue(new InstantCommand(() -> turret.setTurretSpeed(0.15)));
-    controllerA.a().onFalse(new InstantCommand(() -> turret.stopTurret()));
-    controllerA.b().whileTrue(new InstantCommand(() -> turret.setTurretSpeed(-0.15)));
-    controllerA.b().onFalse(new InstantCommand(() -> turret.stopTurret()));
-
-    controllerA.leftBumper().onTrue(new InstantCommand(() -> {
-      shooter.setMainShooterPower(0.15);
-      shooter.setMode(ShooterMode.ManualSpin);
-    }));
-    controllerA.leftBumper().onFalse(new InstantCommand(() -> {
-      shooter.setMainShooterPower(0.0);
-    }));
-    controllerA.povUp().and(controllerA.leftBumper())
-      .onTrue(new InstantCommand(() -> shooter.updateMainShooterPower(0.05)));
-    controllerA.povDown().and(controllerA.leftBumper())
-      .onTrue(new InstantCommand(() -> shooter.updateMainShooterPower(-0.05)));
-
-    controllerA.rightBumper().onTrue(new InstantCommand(() -> {
-      shooter.setSecondaryShooterPower(0.15);
-      shooter.setMode(ShooterMode.ManualSpin);
-    }));
-    controllerA.rightBumper().onFalse(new InstantCommand(() -> {
-      shooter.setSecondaryShooterPower(0.0);
-    }));
-    controllerA.povUp().and(controllerA.rightBumper())
-      .onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterPower(0.05)));
-    controllerA.povDown().and(controllerA.rightBumper())
-      .onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterPower(-0.05)));
-    
-    controllerA.x().onTrue(new InstantCommand(() -> {
-      shooter.setMode(ShooterMode.Shooting);
-    }));
-
-
-    controllerA.leftTrigger(0.5).onTrue(new InstantCommand(() -> {
-      intake.setState(0.2, IntakeMode.ManualSpin);
-      feeder.setState(0.6, FeederMode.ManualFeed);
-    }));
-    controllerA.leftTrigger(0.5).onFalse(new InstantCommand(() -> {
-      intake.setState(0.0, IntakeMode.Stopped);
-      feeder.setState(0.0, FeederMode.Stopped);
-      
-    }));
-
-    int increment = 500;
-
-    controllerA.povUp().and(controllerA.leftBumper().negate()).and(controllerA.rightBumper().negate())
-      .onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(increment)));
-    controllerA.povDown().and(controllerA.leftBumper().negate()).and(controllerA.rightBumper().negate())
-      .onTrue(new InstantCommand(() -> shooter.updateMainShooterTargetRPM(-increment)));
-    controllerA.povRight().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(increment)));
-    controllerA.povLeft().onTrue(new InstantCommand(() -> shooter.updateSecondaryShooterTargetRPM(-increment)));
-    controllerA.y().onTrue(new InstantCommand(() -> shooter.setMode(ShooterMode.Stopped)));
-
-    controllerA.start().onTrue(new InstantCommand(() -> drivetrain.resetGyro()));
+    testControllerMappings = new TestControllers(this);
+    competitionControllerMappings = new CompetitionControllers(this);
+    if (DebugConstants.ControlInterface.enableTestControllers) {
+      testControllerMappings.setupControllerAMappings();
+    } else {
+      competitionControllerMappings.setupControllerAMappings();
+    }
   }
 
   public Command getAutonomousCommand() {
