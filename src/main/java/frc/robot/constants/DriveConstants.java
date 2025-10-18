@@ -25,7 +25,7 @@ public class DriveConstants {
         public static final int currenLimit = 30;
         public static final IdleMode idleMode = IdleMode.kBrake;
         public static final double closedLoopRampRate = 0.0;
-        public static final double openLoopRampRate = 0.0;
+        public static final double openLoopRampRate = 0.3;
 
         // Motor PID
         public static final double driveP = 0.0003;
