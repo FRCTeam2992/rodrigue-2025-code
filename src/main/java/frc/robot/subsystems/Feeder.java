@@ -13,10 +13,12 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.DebugConstants;
 import frc.robot.constants.Devices;
+import frc.robot.constants.SpeedConstants;
 
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkMax;
@@ -38,7 +40,7 @@ public class Feeder extends SubsystemBase {
         Stopped("Stopped"),
         ManualFeed("Manual Feed"),
         AutoFeed("Auto Feeding"),
-        AutoFeedAdvance("Auto Feed Advance");
+        AutoAdvance("Auto Advance");
 
         public final String displayName;
 
@@ -49,8 +51,11 @@ public class Feeder extends SubsystemBase {
     }
 
     private FeederMode mode = FeederMode.Stopped;
+    private FeederMode priorMode = FeederMode.Stopped;
 
     private double speed = 0; // Requested speed
+
+    private final Timer autoAdvanceTimer = new Timer();
 
     private double dashboardCounter = 0;
 
@@ -78,6 +83,25 @@ public class Feeder extends SubsystemBase {
 
     @Override
     public void periodic() {
+
+        if (mode != priorMode) {
+            // Transition into new state
+            switch (mode) {
+                case Stopped:
+                case ManualFeed:
+                    autoAdvanceTimer.stop();
+                    autoAdvanceTimer.reset();
+                    break;
+                case AutoFeed:
+                    autoAdvanceTimer.restart();
+                    break;
+                case AutoAdvance:
+                    break;
+            }
+        }
+
+        priorMode = mode;
+
         switch (mode) {
             case Stopped:
                 feederMotor.set(0.0);
@@ -86,10 +110,20 @@ public class Feeder extends SubsystemBase {
                 feederMotor.set(speed);
                 break;
             case AutoFeed:
-
+                if (ballSeen()) {
+                    this.mode = FeederMode.AutoAdvance;
+                    speed = SpeedConstants.Feeder.autoAdvanceSpeed;
+                }
+                feederMotor.set(speed);
                 break;
-            case AutoFeedAdvance:
-
+            case AutoAdvance:
+                if (autoAdvanceTimer.get() <= SpeedConstants.Feeder.autoAdvanceThresholdSeconds) {
+                    speed = SpeedConstants.Feeder.autoAdvanceSpeed;
+                } else {
+                    this.mode = FeederMode.Stopped;
+                    speed = 0.0;
+                }
+                feederMotor.set(speed);
                 break;
         }
 
@@ -98,6 +132,7 @@ public class Feeder extends SubsystemBase {
             SmartDashboard.putString("Feeder: Mode", mode.displayName);
             SmartDashboard.putNumber("Feeder: Power", speed);
             SmartDashboard.putBoolean("Feeder: Ball Seen", ballSeen());
+            SmartDashboard.putNumber("Feeder: AutoAdvance Timer", autoAdvanceTimer.get());
 
             dashboardCounter = 0;
         }

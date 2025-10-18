@@ -200,11 +200,11 @@ public class Shooter extends SubsystemBase {
   }
 
   public void updateMainShooterTargetRPM(double velocityChangeRPM) {
-    this.mainShooterSetRPM = mainShooterSetRPM + velocityChangeRPM;
+    this.mainShooterSetRPM = MathUtil.clamp(mainShooterSetRPM + velocityChangeRPM, 0.0, 4500.0);
   }
 
   public void updateSecondaryShooterTargetRPM(double velocityChangeRPM) {
-    this.secondaryShooterSetRPM = secondaryShooterSetRPM + velocityChangeRPM;
+    this.secondaryShooterSetRPM = MathUtil.clamp(secondaryShooterSetRPM + velocityChangeRPM, 0.0, 6000.0);
   }
 
   public double getMainShooterTargetRPM() {

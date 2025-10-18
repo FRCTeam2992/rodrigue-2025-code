@@ -4,28 +4,28 @@ public class SpeedConstants {
     public static class ManualIntake {
         public static final double intakePower = 0.2;
         public static final double feederPower = 0.6;
-        public static final double funnelPower = 0.4;
+        public static final double funnelPower = 0.2;
     }
 
     public static class AutoIntake {
         public static final double intakePower = 0.2;
         public static final double feederPower = 0.6;
-        public static final double funnelPower = 0.4;
+        public static final double funnelPower = 0.1;
     }
 
     public static class DejamIntake {
         public static final double intakePower = -0.2;
-        public static final double feederPower = -0.6;
+        public static final double feederPower = -0.4;
         public static final double funnelPower = -0.6;
     }
 
     public static class Shooting {
-        public static final double defaultMainShooterSpeed = 1000; // 2700;
-        public static final double defaultSecondaryShooterSpeed = 1000; // 3300;
+        public static final double defaultMainShooterSpeed = 2000; // 2700;
+        public static final double defaultSecondaryShooterSpeed = 2500; // 3300;
         public static final double shooterSpeedIncrementRPM = 500;
 
-        public static final double feederPower = 0.6;
-        public static final double funnelPower = 0.4;
+        public static final double feederPower = 1.0;
+        public static final double funnelPower = 0.1;
     }
 
     public static class Turret {
@@ -40,5 +40,10 @@ public class SpeedConstants {
         public static final double maxPower = 0.25;
         public static final double minSlowModePower = -0.08;
         public static final double maxSlowModePower = 0.13;
+    }
+
+    public static class Feeder {
+        public static double autoAdvanceThresholdSeconds = 1.1;
+        public static double autoAdvanceSpeed = 0.15;
     }
 }

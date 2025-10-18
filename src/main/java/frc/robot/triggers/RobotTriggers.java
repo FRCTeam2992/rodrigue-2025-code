@@ -11,6 +11,7 @@ public class RobotTriggers {
     RobotContainer robotContainer;
 
     public Trigger readyToShoot;
+    public Trigger ballSeen;
 
     /**
      * Constructor for RobotTriggers.
@@ -27,6 +28,9 @@ public class RobotTriggers {
     public void setupRobotTriggers() {
         this.readyToShoot = new Trigger(() -> {
             return robotContainer.shooter.readyToShoot();
+        });
+        this.ballSeen = new Trigger(() -> {
+            return robotContainer.feeder.ballSeen();
         });
     }
 }
