@@ -1,0 +1,200 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
+package frc.robot.commands;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.lib.drive.swerve.SwerveModuleNeoNeo;
+import frc.robot.constants.DriveConstants;
+import frc.robot.subsystems.DriveTrain;
+
+public class DriveSticks extends Command {
+
+  // Subsystem Instance
+  private DriveTrain mDriveTrain;
+  private CommandXboxController mController;
+
+  // Command States
+  private double gyroTarget;
+  private boolean gyroTargetRecorded;
+
+  public DriveSticks(DriveTrain subsystem, CommandXboxController controller) {
+    // Subsystem Instance
+    mDriveTrain = subsystem;
+    mController = controller;
+
+    // Set the Subsystem Requirement
+    addRequirements(mDriveTrain);
+  }
+
+  // Called when the command is initially scheduled./
+  @Override
+  public void initialize() {
+    // Reset the Target Recorded State
+    gyroTargetRecorded = false;
+
+  }
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    // Joystick Inputs (x1 = Strafe, y1 = Speed, x2 = Rotation)
+    double x1;
+    double y1;
+    double x2;
+
+    x1 = -mController.getLeftX();
+    y1 = -mController.getLeftY();
+    x2 = -mController.getRightX();
+
+    // Get the Joystick Magnitude
+    double xyMagnitude = Math.sqrt((x1 * x1) + (y1 * y1));
+
+    // Check the Magnitude Deadband
+    if (Math.abs(xyMagnitude) <= DriveConstants.joystickDeadband) {
+      x1 = 0.0;
+      y1 = 0.0;
+    } else {
+      // Get the Polar Angle
+      double xyAngle = Math.atan2(y1, x1);
+
+      // Smooth the X and Y Axis
+      double smoothedXYMagnitude = (DriveConstants.joystickXYSmoothFactor * Math.pow(xyMagnitude, 3.0))
+          + ((1.0 - DriveConstants.joystickXYSmoothFactor) * xyMagnitude);
+
+      // Normalize the Magnitude
+      smoothedXYMagnitude = Math.max(-1.0, Math.min(1.0, smoothedXYMagnitude));
+
+      // Convert from Polar to X and Y Coordinates
+      x1 = smoothedXYMagnitude * Math.cos(xyAngle);
+      y1 = smoothedXYMagnitude * Math.sin(xyAngle);
+    }
+
+    // Check the Rotation Deadband
+    if (Math.abs(x2) <= DriveConstants.joystickDeadband) {
+      x2 = 0.0;
+    } else {
+      // Smooth the Rotation Axis and Apply Inverse Deadband
+      double tempInverseDeadband = DriveConstants.joystickRotationInverseDeadband;
+
+      if (x2 >= 0.0) {
+        x2 = tempInverseDeadband
+            + (1.0 - tempInverseDeadband) * ((DriveConstants.joystickRotationSmoothFactor * Math.pow(x2, 3.0))
+                + ((1.0 - DriveConstants.joystickRotationSmoothFactor) * x2));
+      } else {
+        x2 = -tempInverseDeadband
+            + (1.0 - tempInverseDeadband) * ((DriveConstants.joystickRotationSmoothFactor * Math.pow(x2, 3.0))
+                + ((1.0 - DriveConstants.joystickRotationSmoothFactor) * x2));
+      }
+    }
+
+    // Check for Movement
+    if (Math.abs(x1) > 0.0 || Math.abs(y1) > 0.0 || Math.abs(x2) > 0.0)
+    {
+
+      // Demo Slow Mode
+      // x1 /= 4;
+      // y1 /= 4;
+      // x2 /= 4;
+
+      // Slow the Rotation
+      x2 *= (2.0 / 3.0);
+
+      // Gyro Input (-180 to 180)
+      double gyroValue = mDriveTrain.navx.getYaw();
+
+      if (Math.abs(x1) <= DriveConstants.joystickDeadband && Math.abs(y1) <= DriveConstants.joystickDeadband) {
+        gyroTargetRecorded = false;
+      }
+
+      // Gyro Correction
+      if (Math.abs(x2) <= DriveConstants.joystickDeadband && DriveConstants.isGyroCorrected) {
+
+        // Check for Recorded Value
+        if (gyroTargetRecorded) {
+          // Get the Gyro Value
+          double tempGyroValue = gyroValue;
+
+          // Normalize the Target Angle (-180 - 180)
+          if (gyroTarget < -180.0) {
+            gyroTarget += 360.0;
+          } else if (gyroTarget > 180) {
+            gyroTarget -= 360.0;
+          }
+
+          // Normalize the Gyro Angle (-180 - 180)
+          if (tempGyroValue > 180.0) {
+            tempGyroValue -= 360;
+          } else if (tempGyroValue < -180) {
+            tempGyroValue += 360;
+          }
+
+          // Get the Gyro Error
+          double gyroError = gyroTarget + tempGyroValue;
+
+          // Normalize the Gyro Error (-180 - 180)
+          if (gyroError > 180.0) {
+            gyroError -= 360.0;
+          } else if (gyroError < -180.0) {
+            gyroError += 360.0;
+          }
+
+          // Calculate Correction Speed
+          x2 = gyroError * DriveConstants.driveGyroP;
+        } else {
+          // Record a Gyro Value
+          gyroTarget = -gyroValue;
+          gyroTargetRecorded = true;
+        }
+      } else {
+        // Reset the Target Recorded State
+        gyroTargetRecorded = false;
+      }
+
+      // Calculate the Swerve States
+      double[] swerveStates;
+
+      // Check for Field Centric Enabled
+      if (DriveConstants.isFieldCentric) {
+        swerveStates = mDriveTrain.swerveController.calculate(x1, y1, x2, gyroValue);
+      } else {
+        swerveStates = mDriveTrain.swerveController.calculate(x1, y1, x2);
+      }
+
+      // Get the Swerve Modules
+      SwerveModuleNeoNeo frontLeft = mDriveTrain.frontLeftModule;
+      SwerveModuleNeoNeo frontRight = mDriveTrain.frontRightModule;
+      SwerveModuleNeoNeo rearLeft = mDriveTrain.rearLeftModule;
+      SwerveModuleNeoNeo rearRight = mDriveTrain.rearRightModule;
+
+      // Command the Swerve Modules
+      if (DriveConstants.isVelocityControlled) {
+        frontLeft.setDriveVelocity(swerveStates[0], swerveStates[1]);
+        frontRight.setDriveVelocity(swerveStates[2], swerveStates[3]);
+        rearLeft.setDriveVelocity(swerveStates[4], swerveStates[5]);
+        rearRight.setDriveVelocity(swerveStates[6], swerveStates[7]);
+      } else {
+        frontLeft.setDrive(swerveStates[0], swerveStates[1]);
+        frontRight.setDrive(swerveStates[2], swerveStates[3]);
+        rearLeft.setDrive(swerveStates[4], swerveStates[5]);
+        rearRight.setDrive(swerveStates[6], swerveStates[7]);
+      }
+    } else {
+      mDriveTrain.stopDrive();
+    }
+  }
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
+  }
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {
+    mDriveTrain.stopDrive();
+  }
+}

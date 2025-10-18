@@ -6,6 +6,7 @@ public class DebugConstants {
         public static boolean enableTurret = false;
         public static boolean enableShooter = false;
         public static boolean enableIntake = false;
-        public static boolean enableFeeder = true;
+        public static boolean enableFeeder = false;
+        public static boolean enableDrive = false;
     }
 }
